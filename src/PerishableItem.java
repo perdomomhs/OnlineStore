@@ -1,6 +1,6 @@
 import java.io.Serializable;
 
-public class PerishableItem  extends Item implements Serializable {
+public class PerishableItem  extends Item {
     private int daysLeft;
     private boolean donatable;
 

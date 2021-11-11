@@ -1,9 +1,9 @@
 import java.io.Serializable;
 
-public class Item implements Serializable {
+public class Item  {
 
     private static int itemCount = 0;
-    private int itemNum;
+    private int sku;
     private String name;
     private double width,height,length, weight, price;
 
@@ -11,7 +11,7 @@ public class Item implements Serializable {
 
     public Item(String name, double height, double length, double width, double weight ){
         itemCount++;
-        itemNum = itemCount;
+        sku = itemCount;
         this.name = name;
         this.height = height;
         this.width = width;
@@ -21,7 +21,7 @@ public class Item implements Serializable {
     }
     public Item(String name, double height, double length, double width, double weight, double price ){
         itemCount++;
-        itemNum = itemCount;
+        sku = itemCount;
         this.name = name;
         this.height = height;
         this.width = width;
@@ -30,12 +30,12 @@ public class Item implements Serializable {
         this.price = price;
     }
 
-    public int getItemNum() {
-        return itemNum;
+    public int getSku() {
+        return sku;
     }
 
-    public void setItemNum(int itemNum) {
-        this.itemNum = itemNum;
+    public void setSku(int sku) {
+        this.sku = sku;
     }
 
     public String getName() {
@@ -87,6 +87,6 @@ public class Item implements Serializable {
     }
 
     public String toString(){
-        return itemNum +" "+name+" "+price;
+        return sku +" "+name+" "+price;
     }
 }
