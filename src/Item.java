@@ -1,32 +1,31 @@
-import java.io.Serializable;
-
 public class Item  {
 
     private static int itemCount = 0;
     private int sku;
     private String name;
-    private double width,height,length, weight, price;
+    private double width;
+    private double height;
+    private double length;
+    private double price;
 
 
 
-    public Item(String name, double height, double length, double width, double weight ){
+    public Item(String name, double height, double length, double width){
         itemCount++;
         sku = itemCount;
         this.name = name;
         this.height = height;
         this.width = width;
         this.length = length;
-        this.weight = weight;
         price = -1;
     }
-    public Item(String name, double height, double length, double width, double weight, double price ){
+    public Item(String name, double height, double length, double width, double price){
         itemCount++;
         sku = itemCount;
         this.name = name;
         this.height = height;
         this.width = width;
         this.length = length;
-        this.weight = weight;
         this.price = price;
     }
 
@@ -68,14 +67,6 @@ public class Item  {
 
     public void setLength(double length) {
         this.length = length;
-    }
-
-    public double getWeight() {
-        return weight;
-    }
-
-    public void setWeight(double weight) {
-        this.weight = weight;
     }
 
     public double getPrice() {

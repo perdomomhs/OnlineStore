@@ -66,6 +66,10 @@ public class Customer {
         return 0;
     }
 
+    public int getDistance(){
+        return (int)distance;
+    }
+
 
 
 }
