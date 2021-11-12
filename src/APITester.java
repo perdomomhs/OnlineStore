@@ -19,9 +19,5 @@ public class APITester {
         }
          JSONObject obj = new JSONObject(bob.toString());
         int distance = ((JSONObject)obj.query("/routes/0/legs/0/distance")).getInt("value");
-
-
-
-
     }
 }

@@ -7,7 +7,7 @@ public class Customer {
     private String username, password, name, address;
     private ArrayList<Integer> pastOrders;
     private LocalDate dob;
-    private double distance;
+    private int distance;
 
     public Customer(String username, String password, String name, String address, LocalDate dob) {
         this.username = username;
@@ -17,6 +17,16 @@ public class Customer {
         this.dob = dob;
         pastOrders = new ArrayList<>();
         distance = getDistance(address);
+    }
+
+    public Customer(String username, String password, String name, String address, LocalDate dob,ArrayList<Integer> past, int distance) {
+        this.username = username;
+        this.password = password;
+        this.name = name;
+        this.address = address;
+        this.dob = dob;
+        pastOrders = past;
+        this.distance = distance;
     }
 
     public void addOrder(Integer o){
@@ -62,7 +72,7 @@ public class Customer {
         return dob;
     }
 
-    private double getDistance(String address) {
+    private int getDistance(String address) {
         return 0;
     }
 
