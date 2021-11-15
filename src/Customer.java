@@ -62,6 +62,7 @@ public class Customer {
 
     public void setAddress(String address) {
         this.address = address;
+        distance = getDistance(address);
     }
 
     public ArrayList<Integer> getPastOrders() {
