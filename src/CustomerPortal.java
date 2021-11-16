@@ -13,9 +13,7 @@ public class CustomerPortal {
     public static void main(String[] args) {
         stmt = new DBInterface("database.db").getStatement();
         sc = new Scanner(System.in);
-
         int n = -1;
-
         System.out.println("#### Welcome to Awemazon #####\n");
         while (n != 3) {
             printMenu();
@@ -51,13 +49,8 @@ public class CustomerPortal {
                     placeOrder();
                     break;
                 case 3:
-                    ArrayList<Integer> orders  = customer.getPastOrders();
-                    StringBuilder sql =new StringBuilder("SELECT * FROM Orders WHERE Invoice IN (");
-                    for(Integer o: orders){
-                        sql.append(o);
-                        sql.append(",");
-                    }
-                    sql.append(")");
+
+                    StringBuilder sql =new StringBuilder("SELECT * FROM Orders WHERE Customer = \""+customer.getUsername()+"\'");
                     String out="";
                     try {
                         ResultSet set = stmt.executeQuery(sql.toString());
@@ -80,6 +73,7 @@ public class CustomerPortal {
                     break;
                 case 4:
                     System.out.println("Logged out.");
+                    updateCustomer();
                     customer = null;
                     break;
             }
@@ -89,43 +83,71 @@ public class CustomerPortal {
     }
 
     private static void placeOrder() {
-        String ans = "";
         ArrayList<Item> items = new ArrayList<>();
+        System.out.println("Enter search(type exit to exit):");
+        String ans = sc.nextLine();
         while(!ans.equalsIgnoreCase("exit")){
+            try {
+                ResultSet set = stmt.executeQuery("SELECT * FROM Inventory WHERE Name LIKE \"%"+ans+"%\"");
+                if (!set.next()) {
+                    System.out.println("No results");
+                }
+                int i = 1;
+                do {
+                    System.out.println(i + " QTY: " + set.getInt(2) + " Name: " + set.getString(3) + " Price:"+set.getDouble(7));
+                    i++;
+                } while (set.next());
+                System.out.println("Select item to purchase");
+                int n = sc.nextInt();sc.nextLine();
+                set = stmt.executeQuery("SELECT * FROM Inventory WHERE Name LIKE \"%"+ans+"%\"");
+                for(int t= 0;t< n;t++) set.next();
+                stmt.execute("UPDATE Inventory SET QTY="+(set.getInt(2)-1)+" WHERE SKU="+set.getInt(1));
+                Item it = new Item(set.getString(3),set.getDouble(4),set.getDouble(5),set.getDouble(6),set.getDouble(7),set.getInt(0));
+                items.add(it);
+
+            } catch (SQLException e) {
+                System.out.println(e);
+            }
+
             System.out.println("Enter search(type exit to exit):");
             ans = sc.nextLine();
-
-            if(!ans.equalsIgnoreCase("exit")) {
-                try {
-                    ResultSet set = stmt.executeQuery("");
-                    if (!set.next()) {
-                        System.out.println("No results");
-                    }
-                    int i = 1;
-                    do {
-                        System.out.println(i + " QTY: " + set.getInt(2) + " Name: " + set.getString(3) + " Price:"+set.getDouble(7));
-                        i++;
-                    } while (set.next());
-                    System.out.println("Select item to purchase");
-                    int n = sc.nextInt();
-                    stmt.execute("UPDATE QTY");
-                    set.beforeFirst();
-                    for(int t= 0;t< n;t++) set.next();
-                    Item it = new Item(set.getString(3),set.getDouble(4),set.getDouble(5),set.getDouble(6),set.getDouble(7));
-                    items.add(it);
-
-                } catch (SQLException e) {
-                    System.out.println(e);
-                }
-            }
         }
-        Order  o = new Order(customer,(Item[])items.toArray(), Order.Carrier.USPS);
-        addOrderToDB(o);
+        if(items.size()>0){
+            Order  o = new Order(customer,items.toArray(new Item[0]), Order.Carrier.USPS);
+            addOrderToDB(o);
+        }
 
     }
 
     private static void addOrderToDB(Order o) {
+        StringBuilder sql = new StringBuilder("INSERT INTO Orders VALUES (\""+o.getOrderDate()+"\",\""+o.getCustomer()+"\",\"");
+        Item[] it = o.getItems();
+        for(Item i:it){
+            sql.append(i.getSku());
+            sql.append(",");
+        }
+        if(it.length > 0)
+            sql.delete(sql.length()-1,sql.length());
+        sql.append("\",");
+        sql.append(o.getTotal()+",");
+        sql.append(o.getTax()+",");
+        sql.append(o.getShippingCost()+",");
+        sql.append("\"");
+        Order.Box[]  boxes = o.getBoxes();
+        for(Order.Box b:boxes){
+            sql.append(b.name());
+            sql.append(",");
+        }
+        if(boxes.length > 0)
+            sql.delete(sql.length()-1,sql.length());
+        sql.append("\",");
+        sql.append("\""+o.getCarrier().name()+"\")");
+        try{
 
+            stmt.execute(sql.toString());
+        }catch(SQLException e){
+            System.out.println(e);
+        }
     }
 
     private static String getItems(String items) {
@@ -154,11 +176,11 @@ public class CustomerPortal {
             switch(n){
                 case 1:
                     System.out.print("Enter name: ");
-                    String name = sc.nextLine();
+                    customer.setName(sc.nextLine());
                     break;
                 case 2:
                     String pass1="";
-                    String pass2=" ";
+                    String pass2="";
                     while(!pass1.equals(pass2)){
                         System.out.print ("Enter new password: ");
                         pass1 = sc.nextLine();
@@ -168,9 +190,11 @@ public class CustomerPortal {
                             System.out.println("Passwords do not match!");
                         }
                     }
+                    customer.setPassword(pass1);
                     break;
                 case 3:
-
+                    System.out.println("Enter new address");
+                    customer.setAddress(sc.nextLine());
                     break;
             }
 
@@ -228,7 +252,6 @@ public class CustomerPortal {
                 System.out.println(e);
             }
         }
-        System.out.println("HERE");
         System.out.print("Enter password: ");
         String pass  = sc.nextLine();
         System.out.print("Enter name: ");
@@ -236,17 +259,13 @@ public class CustomerPortal {
         System.out.print("Enter address: ");
         String addr = sc.nextLine();
         String dob ="";
-        while(true) {
-            System.out.print("Enter date of birth (yyyy\\mm\\dd): ");
-            dob = sc.nextLine();
-            if(true)
-                break;
-        }
+        System.out.print("Enter date of birth (yyyy-mm-dd): ");
+        dob = sc.nextLine();
         LocalDate DOB = LocalDate.parse(dob);
         Customer c = new Customer(usr, pass,name, addr,DOB);
         int dist = c.getDistance();
         try{
-            stmt.execute("INSERT INTO Customers VALUES (\""+usr+"\",+\""+pass+"\",\""+name+"\",\""+addr+"\",\""+dob+"\",\"\","+dist+")");
+            stmt.execute("INSERT INTO Customers VALUES (\""+usr+"\",+\""+pass+"\",\""+name+"\",\""+addr+"\",\""+dob+"\","+dist+")");
         }catch(SQLException e){
             System.out.println(e);
         }
@@ -266,24 +285,16 @@ public class CustomerPortal {
             String name = set.getString(3);
             String address = set.getString(4);
             LocalDate dob = LocalDate.parse(set.getString(5));
-            ArrayList<Integer> past = new ArrayList<>();
-            if(set.getString(6).length() > 0) {
-                String[] pastOrdersString = set.getString(6).split(",");
-                for (String s : pastOrdersString) {
-                    past.add(Integer.valueOf(s));
-                }
-            }
-            int dist = set.getInt(7);
-            customer = new Customer(username,pass,name,address,dob,past,dist);
+            int dist = set.getInt(6);
+            customer = new Customer(username,pass,name,address,dob,dist);
         }catch(SQLException e){
             System.out.println(e);
         }
 
     }
 
-    public Order getOrder(){
-        return null;
-    }
+    public static void updateCustomer(){
 
+    }
 
 }

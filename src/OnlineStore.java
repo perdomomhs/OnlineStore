@@ -38,8 +38,6 @@ public class OnlineStore {
                             + width+","+price+")");
                 }catch(SQLException e){}
 
-
-
             }else if(n ==2 || n == 3){
                 System.out.println("Enter SKU");
                 int sku = sc.nextInt();sc.nextLine();

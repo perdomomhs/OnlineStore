@@ -1,6 +1,5 @@
 public class Item  {
 
-    private static int itemCount = 0;
     private int sku;
     private String name;
     private double width;
@@ -9,19 +8,8 @@ public class Item  {
     private double price;
 
 
-
-    public Item(String name, double height, double length, double width){
-        itemCount++;
-        sku = itemCount;
-        this.name = name;
-        this.height = height;
-        this.width = width;
-        this.length = length;
-        price = -1;
-    }
-    public Item(String name, double height, double length, double width, double price){
-        itemCount++;
-        sku = itemCount;
+    public Item(String name, double height, double length, double width, double price, int SKU){
+        sku = SKU;
         this.name = name;
         this.height = height;
         this.width = width;

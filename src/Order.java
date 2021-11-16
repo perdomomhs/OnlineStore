@@ -5,8 +5,8 @@ public class Order {
     private Customer customer;
     private Item[] items;
     private Carrier carrier;
-    private int invoice;
     private double total, tax, shippingCost;
+    private Box[] boxes;
 
     public enum Carrier{
         USPS (2,0.025),UPS(6,0.05),FEDEX(6.25,0.08);
@@ -34,6 +34,7 @@ public class Order {
             this.volume =volume;
         }
         public double getVolume(){return volume;}
+
     }
 
     public Order(Customer customer, Item[] items, Carrier carrier){
@@ -47,6 +48,7 @@ public class Order {
         tax = total*0.0825;
         shippingCost = carrier.flatRate+carrier.perKm*customer.getDistance();
         orderDate = LocalDate.now();
+        boxes = new Box[0];
 
     }
 
@@ -83,4 +85,11 @@ public class Order {
         return customer;
     }
 
+    public Box[] getBoxes() {
+        return boxes;
+    }
+
+    public Carrier getCarrier() {
+        return carrier;
+    }
 }
