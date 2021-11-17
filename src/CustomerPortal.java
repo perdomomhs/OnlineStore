@@ -4,14 +4,16 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Arrays;
 
 public class CustomerPortal {
-    private static Statement stmt;
+    private static Statement stmt,stmt2;
     private static Scanner  sc;
     private static Customer customer;
 
     public static void main(String[] args) {
         stmt = new DBInterface("database.db").getStatement();
+        stmt2 = new DBInterface("database.db").getStatement();
         sc = new Scanner(System.in);
         int n = -1;
         System.out.println("#### Welcome to Awemazon #####\n");
@@ -50,26 +52,29 @@ public class CustomerPortal {
                     break;
                 case 3:
 
-                    StringBuilder sql =new StringBuilder("SELECT * FROM Orders WHERE Customer = \""+customer.getUsername()+"\'");
+                    StringBuilder sql = new StringBuilder("SELECT rowid,* FROM Orders WHERE Customer = \""+customer.getUsername()+"\"");
+
                     String out="";
                     try {
                         ResultSet set = stmt.executeQuery(sql.toString());
                         while(set.next()){
-                            out += "Invoice: ";
-                            out += set.getInt(1)+"\n";
-                            out += "Date: ";
-                            out += set.getString(2);
+                            int invoice = set.getInt(1);
+                            String date = set.getString(2);
                             String items = set.getString(4);
-                            out += getItems(items);
-                            out +="Total: ";
-                            out += set.getDouble(5);
-                            out +="Tax: ";
-                            out += set.getDouble(6);
-                            out +="Shipping: ";
-                            out += set.getDouble(7);
+                            double total =  set.getDouble(5);
+                            double tax =  set.getDouble(6);
+                            double shipping = set.getDouble(7);
+                            items = getItems(items);
+                            System.out.println("Invoice: "+invoice+"  Date:"+date+"\n\nItems:\n"+items+"\n\nTotal:"+total+
+                                    "\nTax:"+tax+"\nShipping:"+shipping);
+                            System.out.println("-----------------------------------------------------------------------------");
+
                         }
-                    }catch(SQLException e){}
-                    System.out.println(out);
+
+                    }catch(SQLException e){
+                        e.printStackTrace();
+                    }
+
                     break;
                 case 4:
                     System.out.println("Logged out.");
@@ -91,22 +96,27 @@ public class CustomerPortal {
                 ResultSet set = stmt.executeQuery("SELECT * FROM Inventory WHERE Name LIKE \"%"+ans+"%\"");
                 if (!set.next()) {
                     System.out.println("No results");
-                }
-                int i = 1;
-                do {
-                    System.out.println(i + " QTY: " + set.getInt(2) + " Name: " + set.getString(3) + " Price:"+set.getDouble(7));
-                    i++;
-                } while (set.next());
-                System.out.println("Select item to purchase");
-                int n = sc.nextInt();sc.nextLine();
-                set = stmt.executeQuery("SELECT * FROM Inventory WHERE Name LIKE \"%"+ans+"%\"");
-                for(int t= 0;t< n;t++) set.next();
-                stmt.execute("UPDATE Inventory SET QTY="+(set.getInt(2)-1)+" WHERE SKU="+set.getInt(1));
-                Item it = new Item(set.getString(3),set.getDouble(4),set.getDouble(5),set.getDouble(6),set.getDouble(7),set.getInt(0));
-                items.add(it);
+                }else {
+                    int i = 1;
+                    do {
+                        System.out.println(i + " QTY: " + set.getInt(2) + " Name: " + set.getString(3) + " Price:" + set.getDouble(7));
+                        i++;
+                    } while (set.next());
+                    System.out.println("Select item to purchase");
+                    int n = sc.nextInt();
+                    sc.nextLine();
+                    set = stmt.executeQuery("SELECT * FROM Inventory WHERE Name LIKE \"%" + ans + "%\"");
+                    for(int t = 0; t < n; t++) {
+                        set.next();
+                    }
+                    Item it = new Item(set.getString(3), set.getDouble(4), set.getDouble(5), set.getDouble(6), set.getDouble(7), set.getInt(1));
+                    items.add(it);
+                    stmt.execute("UPDATE Inventory SET QTY=" + (set.getInt(2) - 1) + " WHERE SKU=" + set.getInt(1));
 
+
+                }
             } catch (SQLException e) {
-                System.out.println(e);
+                e.printStackTrace();
             }
 
             System.out.println("Enter search(type exit to exit):");
@@ -120,7 +130,7 @@ public class CustomerPortal {
     }
 
     private static void addOrderToDB(Order o) {
-        StringBuilder sql = new StringBuilder("INSERT INTO Orders VALUES (\""+o.getOrderDate()+"\",\""+o.getCustomer()+"\",\"");
+        StringBuilder sql = new StringBuilder("INSERT INTO Orders VALUES (\""+o.getOrderDate()+"\",\""+o.getCustomer().getUsername()+"\",\"");
         Item[] it = o.getItems();
         for(Item i:it){
             sql.append(i.getSku());
@@ -153,15 +163,22 @@ public class CustomerPortal {
     private static String getItems(String items) {
         StringBuilder ans = new StringBuilder();
         try {
-               ResultSet  set =  stmt.executeQuery("SELECT * FROM Inventory WHERE SKU IN ("+items+")");
+               ArrayList<String> itList= new ArrayList<String>(Arrays.asList(items.split(",")));
+               ResultSet  set =  stmt2.executeQuery("SELECT * FROM Inventory WHERE SKU IN ("+items+")");
                while(set.next()){
-                   ans.append("Name: ");
+                   int sku = set.getInt(1);
+                   int qty = 0;
+                   while(itList.remove(sku+"")) qty++;
+                   ans.append("\t QTY:"+qty);
+                   ans.append("  Name: ");
                    ans.append(set.getString(3));
-                   ans.append(" Price: ");
+                   ans.append("  Price: ");
                    ans.append(set.getDouble(7));
                    ans.append("\n");
                }
-        }catch(SQLException e){}
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
         return ans.toString();
     }
 
@@ -172,6 +189,7 @@ public class CustomerPortal {
             System.out.println("2. Change password");
             System.out.println("3. Change address");
             System.out.println("4. Exit");
+            n = sc.nextInt();sc.nextLine();
 
             switch(n){
                 case 1:
