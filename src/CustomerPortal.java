@@ -198,7 +198,7 @@ public class CustomerPortal {
                     break;
                 case 2:
                     String pass1="";
-                    String pass2="";
+                    String pass2=" ";
                     while(!pass1.equals(pass2)){
                         System.out.print ("Enter new password: ");
                         pass1 = sc.nextLine();
@@ -312,6 +312,18 @@ public class CustomerPortal {
     }
 
     public static void updateCustomer(){
+        String name = customer.getName();
+        String pass = customer.getPassword();
+        String addr = customer.getAddress();
+        int distance = customer.getDistance();
+
+        try{
+            stmt.execute("UPDATE Customers SET (Name,Password,Address,Distance) = (\""+name+"\",\""+pass+"\",\""+addr+"\","+distance+")");
+
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+
 
     }
 

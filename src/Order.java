@@ -1,4 +1,3 @@
-import org.apache.pdfbox.contentstream.PDContentStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -6,6 +5,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 
 public class Order {
@@ -16,9 +16,11 @@ public class Order {
     private double total, tax, shippingCost;
     private Box[] boxes;
 
+    public static final String ORIGIN = "14350+Farm+to+Market+Rd+1488+Magnolia+TX+77354";
+
 
     public enum Carrier{
-        USPS (2,0.025),UPS(6,0.05),FEDEX(6.25,0.08);
+        USPS (2,0.000025),UPS(6,0.00005),FEDEX(6.25,0.00008);
 
         private final double flatRate;
         private final double perKm;
@@ -127,14 +129,23 @@ public class Order {
         cs.showText(""+invNum);
         cs.newLineAtOffset(-45, -60);
         x+=-45; y += -60;
-        for(int i = 0; i<4;i++) {
-            cs.showText("Qty");
-            cs.newLineAtOffset(70,0);
-            cs.showText("Name");
-            cs.newLineAtOffset(250,0);
-            cs.showText("Price");
-            cs.newLineAtOffset(-320,-24);
-            y+=-24;
+        ArrayList<Integer>  itList = new ArrayList<>();
+        for(int i = 0; i<items.length;i++) {
+            if(!itList.contains(items[i].getSku())) {
+                int qty = 0;
+                for(Item it: items) {
+                    if(items[i].getSku() == it.getSku()) qty++;
+                }
+                cs.showText(""+qty);
+
+                cs.newLineAtOffset(70, 0);
+                cs.showText(items[i].getName());
+                cs.newLineAtOffset(250, 0);
+                cs.showText(items[i].getPrice()+"");
+                cs.newLineAtOffset(-320, -24);
+                y += -24;
+                itList.add(items[i].getSku());
+            }
         }
 
         cs.newLineAtOffset(-x,-y);
@@ -152,5 +163,28 @@ public class Order {
 
         doc.save("Invoice_"+invNum+".pdf");
         doc.close();
+    }
+
+    public void generateShippingLabel(int invNum) throws Exception{
+        PDDocument doc = PDDocument.load(new File("stemplate.pdf"));
+        doc.save("Shipping_"+invNum+".pdf");
+        doc.close();
+
+        doc = PDDocument.load(new File("Shipping_"+invNum+".pdf"));
+        PDPage page = doc.getPage(0);
+        PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND,false,true);
+        cs.setFont(PDType1Font.TIMES_ROMAN, 12);
+        cs.beginText();
+        cs.newLineAtOffset(90,655);
+        cs.showText(customer.getName());
+        cs.newLineAtOffset(0,-12);
+        cs.showText(customer.getAddress());
+        cs.newLineAtOffset(20,-163);
+        cs.showText(carrier.name());
+        cs.endText();
+        cs.close();
+        doc.save("Shipping_"+invNum+".pdf");
+        doc.close();
+
     }
 }
